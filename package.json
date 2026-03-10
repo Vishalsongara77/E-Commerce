@@ -1,0 +1,35 @@
+{
+  "name": "tribal-marketplace",
+  "homepage": "https://Vishalsongara77.github.io/TribalMarketPlace/",
+  "version": "1.0.0",
+  "description": "Online Marketplace Platform for Tribal Products",
+  "main": "server.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd backend && npm run dev",
+    "client": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "start": "cd backend && npm start",
+    "predeploy":"npm run build",
+    "deploy": "gh-pages -d frontend/dist",
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "test:frontend": "cd frontend && npm test",
+    "test:backend": "cd backend && npm test",
+    "test": "npm run test:frontend && npm run test:backend"
+  },
+  "keywords": [
+    "tribal",
+    "marketplace",
+    "ecommerce",
+    "handicrafts"
+  ],
+  "author": "Tribal Marketplace Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "axios": "^1.13.1",
+    "gh-pages": "^6.3.0"
+  }
+}
