@@ -141,7 +141,7 @@ app.use('*', (req, res) => {
   res.status(404).json({ success: false, message: 'Route not found' });
 });
 
-if (!isTest) {
+if (!isTest && process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 5000;
   server.listen(PORT, () => {
     console.log(`🚀 Tribal Marketplace server running on port ${PORT}`);
@@ -149,4 +149,4 @@ if (!isTest) {
   });
 }
 
-module.exports = { app, server, io };
+module.exports = app;
