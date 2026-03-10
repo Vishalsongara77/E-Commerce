@@ -28,6 +28,12 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Debug middleware
+app.use((req, res, next) => {
+  console.log(`[Vercel API Request] ${req.method} ${req.url}`);
+  next();
+});
+
 // Security & CORS
 app.use(helmet());
 app.use(cors({
@@ -49,6 +55,11 @@ if (mongoose.connection.readyState === 0) {
 // API Root route as requested
 app.get("/", (req, res) => {
   res.send("API is running");
+});
+
+// Also handle /api specifically as root
+app.get("/api", (req, res) => {
+  res.send("API is running at /api");
 });
 
 // Health check
