@@ -26,6 +26,7 @@ const uploadRoutes = require('./routes/uploads');
 const path = require('path');
 
 const app = express();
+const router = express.Router();
 const isTest = process.env.NODE_ENV === 'test';
 
 // Request logging
@@ -105,25 +106,45 @@ io.on('connection', (socket) => {
 
 
 // API routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/cart', cartRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/checkout', checkoutRoutes);
-app.use('/api/quick-actions', quickActionRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/artisans', artisanRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/reviews', reviewRoutes);
-app.use('/api/chat', chatRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/uploads', uploadRoutes);
+// Use the router for all API routes
+app.use('/api', router);
+// Also mount on root just in case Vercel strips the prefix
+app.use('/', router);
+
+router.use('/auth', authRoutes);
+router.use('/users', userRoutes);
+router.use('/products', productRoutes);
+router.use('/categories', categoryRoutes);
+router.use('/cart', cartRoutes);
+router.use('/orders', orderRoutes);
+router.use('/checkout', checkoutRoutes);
+router.use('/quick-actions', quickActionRoutes);
+router.use('/admin', adminRoutes);
+router.use('/artisans', artisanRoutes);
+router.use('/payments', paymentRoutes);
+router.use('/reviews', reviewRoutes);
+router.use('/chat', chatRoutes);
+router.use('/notifications', notificationRoutes);
+router.use('/uploads', uploadRoutes);
 
 // Health check
-app.get('/api/health', (req, res) => {
+router.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'Tribal Marketplace API is running' });
+});
+
+// Root API route
+router.get('/', (req, res) => {
+  res.json({ success: true, message: 'Welcome to the Tribal Marketplace API' });
+});
+
+// Fallback for non-existent API routes
+router.use('*', (req, res) => {
+  res.status(404).json({ success: false, message: 'API route not found' });
+});
+
+// 404 handler for the app
+app.use('*', (req, res) => {
+  res.status(404).json({ success: false, message: 'Route not found' });
 });
 
 // Error handling middleware
@@ -134,11 +155,6 @@ app.use((err, req, res, next) => {
     message: 'Something went wrong!',
     error: process.env.NODE_ENV === 'development' ? err.message : {}
   });
-});
-
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ success: false, message: 'Route not found' });
 });
 
 if (!isTest && process.env.NODE_ENV !== 'production') {
