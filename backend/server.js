@@ -81,9 +81,20 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // MongoDB connection
 if (!isTest) {
-  mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/tribal_marketplace')
+  const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/tribal_marketplace';
+  console.log(`Attempting to connect to MongoDB: ${mongoURI.split('@').pop()}`); // Log the host part only for security
+  
+  mongoose.connect(mongoURI, {
+    serverSelectionTimeoutMS: 5000,
+    connectTimeoutMS: 10000,
+  })
     .then(() => console.log('MongoDB connected successfully'))
-    .catch(err => console.error('MongoDB connection error:', err));
+    .catch(err => {
+      console.error('MongoDB connection error:', err);
+      if (err.name === 'MongooseServerSelectionError') {
+        console.error('CRITICAL: MongoDB connection timed out. This is likely due to IP whitelisting issues in MongoDB Atlas. Please ensure 0.0.0.0/0 is whitelisted.');
+      }
+    });
 }
 
 // Socket.IO for real-time chat
@@ -129,7 +140,7 @@ router.use('/uploads', uploadRoutes);
 
 // Health check
 router.get('/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Tribal Marketplace API is running' });
+  res.json({ success: true, message: 'Tribal Marketplace API is running' });
 });
 
 // Root API route
