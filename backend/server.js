@@ -155,7 +155,7 @@ router.use('*', (req, res) => {
 
 // 404 handler for the app
 app.use('*', (req, res) => {
-  res.status(404).json({ success: false, message: 'Route not found' });
+  res.status(404).json({ success: false, message: 'Infrastructure Route not found' });
 });
 
 // Error handling middleware
