@@ -3,11 +3,11 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
+const path = require('path');
 
-// Import routes at the top
+// Import routes
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const productRoutes = require('./routes/products');
@@ -23,24 +23,17 @@ const reviewRoutes = require('./routes/reviews');
 const chatRoutes = require('./routes/chat');
 const notificationRoutes = require('./routes/notifications');
 const uploadRoutes = require('./routes/uploads');
-const path = require('path');
 
 const app = express();
-const router = express.Router();
 const isTest = process.env.NODE_ENV === 'test';
+const isProduction = process.env.NODE_ENV === 'production';
 
-// Request logging
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-  next();
-});
+// Socket.io Setup
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
     origin: [
       "http://localhost:5173",
-      "http://localhost:5174",
-      "http://localhost:5175",
       process.env.CLIENT_URL,
       process.env.FRONTEND_URL
     ].filter(Boolean),
@@ -48,32 +41,18 @@ const io = new Server(server, {
   }
 });
 
-// Security middleware
+// Middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(helmet());
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "http://localhost:5174",
-    "http://localhost:5175",
     process.env.CLIENT_URL,
     process.env.FRONTEND_URL
   ].filter(Boolean),
   credentials: true
 }));
-
-const isProduction = process.env.NODE_ENV === 'production';
-
-if (isProduction) {
-  const limiter = rateLimit({
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
-    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10)
-  });
-  app.use('/api/', limiter);
-}
-
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -81,20 +60,9 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // MongoDB connection
 if (!isTest) {
-  const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/tribal_marketplace';
-  console.log(`Attempting to connect to MongoDB: ${mongoURI.split('@').pop()}`); // Log the host part only for security
-  
-  mongoose.connect(mongoURI, {
-    serverSelectionTimeoutMS: 5000,
-    connectTimeoutMS: 10000,
-  })
+  mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/tribal_marketplace')
     .then(() => console.log('MongoDB connected successfully'))
-    .catch(err => {
-      console.error('MongoDB connection error:', err);
-      if (err.name === 'MongooseServerSelectionError') {
-        console.error('CRITICAL: MongoDB connection timed out. This is likely due to IP whitelisting issues in MongoDB Atlas. Please ensure 0.0.0.0/0 is whitelisted.');
-      }
-    });
+    .catch(err => console.error('MongoDB connection error:', err));
 }
 
 // Socket.IO for real-time chat
@@ -114,48 +82,36 @@ io.on('connection', (socket) => {
   });
 });
 
-
-
-// API routes
-// Use the router for all API routes
-app.use('/api', router);
-// Also mount on root just in case Vercel strips the prefix
-app.use('/', router);
-
-router.use('/auth', authRoutes);
-router.use('/users', userRoutes);
-router.use('/products', productRoutes);
-router.use('/categories', categoryRoutes);
-router.use('/cart', cartRoutes);
-router.use('/orders', orderRoutes);
-router.use('/checkout', checkoutRoutes);
-router.use('/quick-actions', quickActionRoutes);
-router.use('/admin', adminRoutes);
-router.use('/artisans', artisanRoutes);
-router.use('/payments', paymentRoutes);
-router.use('/reviews', reviewRoutes);
-router.use('/chat', chatRoutes);
-router.use('/notifications', notificationRoutes);
-router.use('/uploads', uploadRoutes);
+// API Root route as requested
+app.get("/", (req, res) => {
+  res.send("API is running");
+});
 
 // Health check
-router.get('/health', (req, res) => {
+app.get("/api/health", (req, res) => {
   res.json({ success: true, message: 'Tribal Marketplace API is running' });
 });
 
-// Root API route
-router.get('/', (req, res) => {
-  res.json({ success: true, message: 'Welcome to the Tribal Marketplace API' });
-});
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/checkout', checkoutRoutes);
+app.use('/api/quick-actions', quickActionRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/artisans', artisanRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/uploads', uploadRoutes);
 
-// Fallback for non-existent API routes
-router.use('*', (req, res) => {
-  res.status(404).json({ success: false, message: 'API route not found' });
-});
-
-// 404 handler for the app
+// 404 handler
 app.use('*', (req, res) => {
-  res.status(404).json({ success: false, message: 'Infrastructure Route not found' });
+  res.status(404).json({ success: false, message: 'Route not found' });
 });
 
 // Error handling middleware
@@ -168,7 +124,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-if (!isTest && process.env.NODE_ENV !== 'production') {
+if (!isTest && !isProduction) {
   const PORT = process.env.PORT || 5000;
   server.listen(PORT, () => {
     console.log(`🚀 Tribal Marketplace server running on port ${PORT}`);
