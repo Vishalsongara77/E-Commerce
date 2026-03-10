@@ -34,6 +34,7 @@ const io = new Server(server, {
   cors: {
     origin: [
       "http://localhost:5173",
+      "https://e-commerce-ui-drab.vercel.app",
       process.env.CLIENT_URL,
       process.env.FRONTEND_URL
     ].filter(Boolean),
@@ -48,6 +49,7 @@ app.use(helmet());
 app.use(cors({
   origin: [
     "http://localhost:5173",
+    "https://e-commerce-ui-drab.vercel.app",
     process.env.CLIENT_URL,
     process.env.FRONTEND_URL
   ].filter(Boolean),
