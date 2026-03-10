@@ -60,9 +60,22 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // MongoDB connection
 if (!isTest) {
-  mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/tribal_marketplace')
+  const uri = process.env.MONGODB_URI;
+  if (!uri && isProduction) {
+    console.error('CRITICAL ERROR: MONGODB_URI environment variable is missing in production!');
+  }
+  
+  mongoose.connect(uri || 'mongodb://localhost:27017/tribal_marketplace', {
+    serverSelectionTimeoutMS: 5000,
+    connectTimeoutMS: 10000,
+  })
     .then(() => console.log('MongoDB connected successfully'))
-    .catch(err => console.error('MongoDB connection error:', err));
+    .catch(err => {
+      console.error('MongoDB connection error:', err.message);
+      if (err.message.includes('ECONNREFUSED')) {
+        console.error('HINT: Backend is trying to connect to localhost. Ensure MONGODB_URI is set.');
+      }
+    });
 }
 
 // Socket.IO for real-time chat

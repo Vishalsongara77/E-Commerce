@@ -3,7 +3,6 @@ const express = require("express");
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
-const path = require('path');
 
 // Import routes
 const authRoutes = require('../backend/routes/auth');
@@ -24,17 +23,9 @@ const uploadRoutes = require('../backend/routes/uploads');
 
 const app = express();
 
-// Body parsing
+// Middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Debug middleware
-app.use((req, res, next) => {
-  console.log(`[Vercel API Request] ${req.method} ${req.url}`);
-  next();
-});
-
-// Security & CORS
 app.use(helmet());
 app.use(cors({
   origin: [
@@ -45,58 +36,49 @@ app.use(cors({
   credentials: true
 }));
 
-// MongoDB connection (only if not already connected)
+// MongoDB connection
 if (mongoose.connection.readyState === 0) {
-  mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/tribal_marketplace')
+  const uri = process.env.MONGODB_URI;
+  mongoose.connect(uri || 'mongodb://localhost:27017/tribal_marketplace', {
+    serverSelectionTimeoutMS: 5000,
+    connectTimeoutMS: 10000,
+  })
     .then(() => console.log('MongoDB connected successfully'))
-    .catch(err => console.error('MongoDB connection error:', err));
+    .catch(err => console.error('MongoDB connection error:', err.message));
 }
 
-// API Root route as requested
-app.get("/", (req, res) => {
-  res.send("API is running");
-});
+// API Routes mapping
+// Vercel routes /api/something to this file. 
+// We need to handle /api/something and /something
+const router = express.Router();
 
-// Also handle /api specifically as root
-app.get("/api", (req, res) => {
-  res.send("API is running at /api");
-});
+router.get("/", (req, res) => res.send("API is running"));
+router.get("/health", (req, res) => res.json({ success: true, message: 'Tribal Marketplace API is running' }));
 
-// Health check
-app.get("/api/health", (req, res) => {
-  res.json({ success: true, message: 'Tribal Marketplace API is running' });
-});
+router.use('/auth', authRoutes);
+router.use('/users', userRoutes);
+router.use('/products', productRoutes);
+router.use('/categories', categoryRoutes);
+router.use('/cart', cartRoutes);
+router.use('/orders', orderRoutes);
+router.use('/checkout', checkoutRoutes);
+router.use('/quick-actions', quickActionRoutes);
+router.use('/admin', adminRoutes);
+router.use('/artisans', artisanRoutes);
+router.use('/payments', paymentRoutes);
+router.use('/reviews', reviewRoutes);
+router.use('/chat', chatRoutes);
+router.use('/notifications', notificationRoutes);
+router.use('/uploads', uploadRoutes);
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/cart', cartRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/checkout', checkoutRoutes);
-app.use('/api/quick-actions', quickActionRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/artisans', artisanRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/reviews', reviewRoutes);
-app.use('/api/chat', chatRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/uploads', uploadRoutes);
+// Mount router on both /api and / for maximum compatibility
+app.use('/api', router);
+app.use('/', router);
 
-// Fallback for API routes
-app.use('/api/*', (req, res) => {
-  res.status(404).json({ success: false, message: 'API route not found' });
-});
-
-// Error handling middleware
+// Error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ 
-    success: false, 
-    message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err.message : {}
-  });
+  res.status(500).json({ success: false, message: 'Internal Server Error' });
 });
 
 module.exports = app;
