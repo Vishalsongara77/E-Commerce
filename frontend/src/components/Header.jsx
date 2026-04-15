@@ -73,17 +73,17 @@ const Header = () => {
             }
             className="flex items-center gap-2 group"
           >
-            <div className="w-10 h-10 bg-terracotta rounded-lg flex items-center justify-center text-white font-serif text-2xl group-hover:rotate-6 transition-transform">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-terracotta rounded-lg flex items-center justify-center text-white font-serif text-xl sm:text-2xl group-hover:rotate-6 transition-transform">
               T
             </div>
-            <span className="text-2xl font-display font-bold text-forest tracking-tight">
+            <span className="text-xl sm:text-2xl font-display font-bold text-forest tracking-tight">
               Tribal <span className="text-terracotta">Marketplace</span>
             </span>
           </Link>
 
           {/* Desktop Navigation */}
           {!isAdmin && !isSeller && (
-            <nav className="hidden md:flex items-center space-x-10">
+            <nav className="hidden md:flex items-center space-x-8 lg:space-x-10">
               {navigationLinks.map((link) => (
                 <Link
                   key={link.to}
@@ -98,10 +98,10 @@ const Header = () => {
           )}
 
           {/* User Actions */}
-          <div className="flex items-center space-x-2">
-            {/* Profile shortcut */}
+          <div className="flex items-center space-x-1 sm:space-x-2">
+            {/* Profile shortcut - hidden on mobile, available in menu */}
             <button
-              className="p-2 text-gray-600 hover:text-terracotta transition-colors"
+              className="hidden sm:block p-2 text-gray-600 hover:text-terracotta transition-colors"
               onClick={() => {
                 if (isAuthenticated && !isAdmin) {
                   navigate('/profile')
@@ -155,7 +155,7 @@ const Header = () => {
                 </button>
               </div>
             ) : (
-              <div className="flex items-center space-x-4">
+              <div className="hidden sm:flex items-center space-x-4">
                 <Link
                   to="/login"
                   className="text-sm font-semibold text-forest hover:text-terracotta transition-colors"
@@ -175,8 +175,10 @@ const Header = () => {
             {!isAdmin && !isSeller && (
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="md:hidden p-2 rounded-md text-gray-600 hover:text-terracotta"
+                className="md:hidden p-2 ml-1 rounded-md text-gray-600 hover:text-terracotta focus:outline-none focus:ring-2 focus:ring-inset focus:ring-terracotta transition-all"
+                aria-expanded={isMenuOpen}
               >
+                <span className="sr-only">Open main menu</span>
                 {isMenuOpen ? <FiX className="w-6 h-6" /> : <FiMenu className="w-6 h-6" />}
               </button>
             )}
@@ -191,16 +193,48 @@ const Header = () => {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className="text-lg font-serif font-medium text-gray-900 px-4 hover:text-terracotta"
+                  className="text-lg font-serif font-medium text-gray-900 px-4 hover:text-terracotta transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {link.label}
                 </Link>
               ))}
-              {!isAuthenticated && (
+              
+              {!isAuthenticated ? (
                 <div className="pt-4 border-t border-sand-100 flex flex-col space-y-3 px-4">
-                  <Link to="/login" className="text-center font-semibold text-forest py-2">Login</Link>
-                  <Link to="/register" className="btn btn-primary w-full py-3">Join Us</Link>
+                  <Link 
+                    to="/login" 
+                    className="text-center font-semibold text-forest py-2 hover:bg-sand-50 rounded-lg transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Login
+                  </Link>
+                  <Link 
+                    to="/register" 
+                    className="btn btn-primary w-full py-3"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Join Us
+                  </Link>
+                </div>
+              ) : (
+                <div className="pt-4 border-t border-sand-100 flex flex-col space-y-3 px-4">
+                   <Link 
+                    to={getDashboardLink()} 
+                    className="text-lg font-serif font-medium text-gray-900 hover:text-terracotta transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsMenuOpen(false);
+                    }}
+                    className="flex items-center text-red-600 font-semibold py-2"
+                  >
+                    <FiLogOut className="mr-2" /> Logout
+                  </button>
                 </div>
               )}
             </div>
