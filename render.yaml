@@ -13,9 +13,9 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: FRONTEND_URL
-        value: https://e-commerce-afh0cmqa6-vishals-projects-10e53c1e.vercel.app
+        value: https://e-commerce-ui-drab.vercel.app
       - key: CLIENT_URL
-        value: https://e-commerce-afh0cmqa6-vishals-projects-10e53c1e.vercel.app
+        value: https://e-commerce-ui-drab.vercel.app
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY
