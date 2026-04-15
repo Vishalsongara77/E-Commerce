@@ -36,6 +36,7 @@ const io = new Server(server, {
       "http://localhost:5173",
       "https://e-commerce-ui-drab.vercel.app",
       "https://e-commerce-bif8altmi-vishals-projects-10e53c1e.vercel.app",
+      "https://e-commerce-afh0cmqa6-vishals-projects-10e53c1e.vercel.app",
       process.env.CLIENT_URL,
       process.env.FRONTEND_URL
     ].filter(Boolean),
@@ -52,6 +53,7 @@ app.use(cors({
     "http://localhost:5173",
     "https://e-commerce-ui-drab.vercel.app",
     "https://e-commerce-bif8altmi-vishals-projects-10e53c1e.vercel.app",
+    "https://e-commerce-afh0cmqa6-vishals-projects-10e53c1e.vercel.app",
     process.env.CLIENT_URL,
     process.env.FRONTEND_URL
   ].filter(Boolean),
