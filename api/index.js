@@ -3,6 +3,7 @@ const express = require("express");
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
 
 // Import routes
 const authRoutes = require('../backend/routes/auth');
@@ -50,6 +51,7 @@ const app = express();
 // Middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser());
 app.use(helmet());
 app.use(cors(corsOptions));
 

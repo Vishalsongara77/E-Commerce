@@ -7,8 +7,7 @@ if (process.env.NODE_ENV === 'production') {
     cookie: {
       httpOnly: true,
       secure: true,
-      sameSite: 'strict',
-      domain: process.env.COOKIE_DOMAIN || 'localhost',
+      sameSite: 'none', // Required for cross-site cookie between Render and Vercel
       path: '/'
     }
   });
