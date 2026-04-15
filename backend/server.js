@@ -28,37 +28,41 @@ const app = express();
 const isTest = process.env.NODE_ENV === 'test';
 const isProduction = process.env.NODE_ENV === 'production';
 
+// CORS Configuration
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://e-commerce-ui-drab.vercel.app",
+  process.env.CLIENT_URL,
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"]
+};
+
 // Socket.io Setup
 const server = createServer(app);
 const io = new Server(server, {
-  cors: {
-    origin: [
-      "http://localhost:5173",
-      "https://e-commerce-ui-drab.vercel.app",
-      "https://e-commerce-bif8altmi-vishals-projects-10e53c1e.vercel.app",
-      "https://e-commerce-afh0cmqa6-vishals-projects-10e53c1e.vercel.app",
-      process.env.CLIENT_URL,
-      process.env.FRONTEND_URL
-    ].filter(Boolean),
-    methods: ["GET", "POST"]
-  }
+  cors: corsOptions
 });
 
 // Middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(helmet());
-app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://e-commerce-ui-drab.vercel.app",
-    "https://e-commerce-bif8altmi-vishals-projects-10e53c1e.vercel.app",
-    "https://e-commerce-afh0cmqa6-vishals-projects-10e53c1e.vercel.app",
-    process.env.CLIENT_URL,
-    process.env.FRONTEND_URL
-  ].filter(Boolean),
-  credentials: true
-}));
+app.use(cors(corsOptions));
 
 // Static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
