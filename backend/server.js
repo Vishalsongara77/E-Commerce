@@ -139,11 +139,11 @@ app.use((err, req, res, next) => {
   });
 });
 
-if (!isTest && !isProduction) {
+if (!isTest) {
   const PORT = process.env.PORT || 5000;
   server.listen(PORT, () => {
     console.log(`🚀 Tribal Marketplace server running on port ${PORT}`);
-    console.log(`📱 Environment: ${process.env.NODE_ENV}`);
+    console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`);
   });
 }
 
